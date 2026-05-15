@@ -233,4 +233,41 @@ app.get("/api/listings/:cardId", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
+// Fetch and cache card images from Lorcast
+app.get("/api/sync-images", async (req, res) => {
+  try {
+    let allCards = [];
+    let page = 1;
+    let hasMore = true;
+
+    while (hasMore) {
+      const r = await fetch(`https://api.lorcast.com/v0/cards/search?q=rarity:enchanted+lang:en&unique=prints&page=${page}`);
+      const data = await r.json();
+      if (data.results?.length) {
+        allCards = allCards.concat(data.results);
+        hasMore = data.has_more || false;
+        page++;
+      } else { hasMore = false; }
+    }
+
+    // Update cards table with image URLs
+    for (const card of allCards) {
+      const imgUrl = card.image_uris?.digital?.normal || null;
+      const cardNum = parseInt(card.collector_number);
+      const setNum = card.set?.code ? parseInt(card.set.code.replace(/\D/g,'')) : null;
+      
+      if (imgUrl && cardNum && setNum) {
+        await supabase.from("cards")
+          .update({ image_url: imgUrl })
+          .eq("set_id", setNum)
+          .like("id", `${setNum}-%`)
+          .gte("id", `${setNum}-1`)
+          .lte("id", `${setNum}-99`);
+      }
+    }
+    res.json({ success: true, synced: allCards.length });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
 app.listen(PORT, () => console.log(`Lorcana Tracker API running on port ${PORT}`));
