@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>✦ Lorcana Enchanted Intelligence</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0d0f1a;
+      --surface: #13162a;
+      --surface2: #1a1e35;
+      --border: #252942;
+      --gold: #f0c040;
+      --gold-dim: rgba(240,192,64,0.6);
+      --text: #e8e4d8;
+      --text-dim: #6b7280;
+      --text-mid: #9ca3af;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    .header { background: linear-gradient(180deg,#080a14 0%,#0d0f1a 100%); border-bottom: 1px solid var(--border); padding: 14px 24px 10px; position: sticky; top: 0; z-index: 200; }
+    .header-inner { max-width: 1400px; margin: 0 auto; }
+    .header-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .logo { font-family: 'Cinzel', serif; font-size: 18px; font-weight: 700; color: var(--gold); letter-spacing: 0.06em; text-shadow: 0 0 20px rgba(240,192,64,0.3); }
+    .logo-sub { font-size: 9px; color: var(--gold-dim); letter-spacing: 0.3em; margin-top: 2px; }
+    .header-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+    .chips { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+    .chip { background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 3px 12px; font-size: 11px; color: var(--text-mid); }
+    .chip.active { border-color: var(--gold); color: var(--gold); background: rgba(240,192,64,0.08); }
+    .progress-wrap { margin-top: 10px; }
+    .progress-label { font-size: 11px; color: var(--gold); margin-bottom: 4px; }
+    .progress-bar { background: var(--surface2); border-radius: 99px; height: 4px; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg,var(--gold),#fff9c4); border-radius: 99px; transition: width 0.5s; width: 0%; }
+
+    .btn { padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 12px; transition: all 0.2s; }
+    .btn-primary { background: linear-gradient(135deg,#1e3a8a,#2563eb); color: white; box-shadow: 0 2px 8px rgba(37,99,235,0.4); }
+    .btn-danger { background: linear-gradient(135deg,#991b1b,#dc2626); color: white; }
+    .btn-ghost { background: var(--surface2); color: var(--text-mid); border: 1px solid var(--border); }
+    .btn:hover { opacity: 0.85; transform: translateY(-1px); }
+
+    .body { max-width: 1400px; margin: 0 auto; padding: 16px 24px; }
+
+    .tabs { display: flex; gap: 4px; margin-bottom: 16px; background: var(--surface); border-radius: 10px; padding: 4px; border: 1px solid var(--border); }
+    .tab { flex: 1; padding: 8px; border-radius: 7px; cursor: pointer; border: none; background: transparent; color: var(--text-dim); font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 500; transition: all 0.2s; }
+    .tab.active { background: var(--surface2); color: var(--gold); border: 1px solid var(--border); font-weight: 600; }
+
+    .filters { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+    .filter-input, .filter-select { padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-family: 'Inter', sans-serif; font-size: 12px; outline: none; }
+    .filter-input { flex: 2; min-width: 160px; }
+    .filter-input:focus, .filter-select:focus { border-color: var(--gold); }
+    .results-count { font-size: 11px; color: var(--text-dim); margin-bottom: 10px; }
+
+    /* CARD GRID — portrait cards */
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+
+    .set-header { grid-column: 1/-1; font-family: 'Cinzel', serif; font-size: 10px; font-weight: 600; letter-spacing: 0.25em; text-transform: uppercase; padding: 10px 0 6px; border-bottom: 1px solid; margin-bottom: 2px; display: flex; align-items: center; gap: 8px; }
+
+    /* CARD TILE — portrait ratio like actual card */
+    .card-tile { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; transition: all 0.2s; position: relative; cursor: pointer; }
+    .card-tile:hover { border-color: rgba(240,192,64,0.4); transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,0.6); }
+    .card-tile.owned { border-color: rgba(240,192,64,0.6); box-shadow: 0 0 0 1px rgba(240,192,64,0.2); }
+
+    /* Full card image — portrait aspect ratio */
+    .card-img-wrap { position: relative; width: 100%; aspect-ratio: 488/681; overflow: hidden; background: var(--surface2); }
+    .card-img { width: 100%; height: 100%; object-fit: cover; object-position: center center; transition: transform 0.3s; display: block; }
+    .card-tile:hover .card-img { transform: scale(1.04); }
+    .card-img-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 40px; background: linear-gradient(135deg,var(--surface2),var(--bg)); }
+
+    /* Subtle gradient at bottom for readability */
+    .card-img-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(13,15,26,0.85) 0%, rgba(13,15,26,0.1) 35%, transparent 60%); }
+
+    /* Own toggle */
+    .own-badge { position: absolute; top: 7px; left: 7px; z-index: 2; width: 22px; height: 22px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.2); background: rgba(13,15,26,0.7); display: flex; align-items: center; justify-content: center; font-size: 11px; cursor: pointer; transition: all 0.2s; backdrop-filter: blur(4px); color: transparent; }
+    .own-badge.owned { border-color: var(--gold); background: rgba(240,192,64,0.25); color: var(--gold); }
+
+    /* Signal badge */
+    .signal-badge { position: absolute; top: 7px; right: 7px; z-index: 2; font-size: 8px; font-weight: 700; padding: 2px 7px; border-radius: 99px; backdrop-filter: blur(4px); letter-spacing: 0.05em; border: 1px solid transparent; }
+
+    /* Price overlay at bottom of image */
+    .price-overlay { position: absolute; bottom: 0; left: 0; right: 0; z-index: 2; padding: 8px 10px; display: flex; align-items: flex-end; justify-content: space-between; }
+    .card-name-overlay { font-size: 11px; font-weight: 600; color: white; line-height: 1.2; text-shadow: 0 1px 4px rgba(0,0,0,0.8); flex: 1; min-width: 0; padding-right: 8px; }
+    .price-chip { background: rgba(13,15,26,0.85); border: 1px solid rgba(240,192,64,0.4); border-radius: 8px; padding: 4px 8px; text-align: center; flex-shrink: 0; backdrop-filter: blur(4px); }
+    .price-chip-val { font-size: 13px; font-weight: 700; color: var(--gold); line-height: 1; }
+    .price-chip-lbl { font-size: 7px; color: var(--text-dim); letter-spacing: 0.08em; text-transform: uppercase; margin-top: 1px; }
+    .price-chip.no-price { border-color: rgba(107,114,128,0.3); }
+    .price-chip.no-price .price-chip-val { font-size: 11px; color: var(--text-dim); }
+
+    /* Paid row below image */
+    .paid-row { padding: 7px 10px; border-top: 1px solid var(--border); display: flex; gap: 6px; align-items: center; background: var(--surface); }
+    .paid-label { font-size: 9px; color: var(--text-dim); flex-shrink: 0; }
+    .paid-input { flex: 1; min-width: 0; padding: 3px 6px; border-radius: 5px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 11px; font-family: 'Inter', sans-serif; outline: none; }
+    .paid-input:focus { border-color: var(--gold); }
+    .pnl-chip { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 99px; flex-shrink: 0; }
+
+    /* OPPORTUNITIES */
+    .opp-banner { background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.3); border-radius: 12px; padding: 14px 18px; margin-bottom: 16px; }
+    .opp-title { font-size: 14px; font-weight: 700; color: #22c55e; }
+    .opp-desc { font-size: 11px; color: rgba(34,197,94,0.6); margin-top: 4px; }
+    .opp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px,1fr)); gap: 10px; }
+    .opp-card { background: var(--surface); border: 1px solid rgba(34,197,94,0.25); border-radius: 10px; overflow: hidden; transition: all 0.2s; }
+    .opp-card:hover { border-color: rgba(34,197,94,0.5); transform: translateY(-2px); }
+
+    /* PORTFOLIO */
+    .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 20px; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+    .stat-val { font-size: 24px; font-weight: 700; font-family: 'Cinzel', serif; }
+    .stat-label { font-size: 9px; color: var(--text-dim); margin-top: 4px; letter-spacing: 0.15em; text-transform: uppercase; }
+    .port-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px,1fr)); gap: 10px; }
+
+    .empty { text-align: center; padding: 4rem; color: var(--text-dim); }
+    .empty-icon { font-size: 48px; margin-bottom: 12px; }
+
+    .loading-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: var(--bg); }
+    .loading-inner { text-align: center; }
+    .loading-icon { font-size: 56px; margin-bottom: 16px; animation: pulse 2s ease-in-out infinite; display: block; }
+    .loading-title { font-family: 'Cinzel', serif; font-size: 20px; color: var(--gold); margin-bottom: 8px; }
+    .loading-sub { font-size: 12px; color: var(--text-dim); }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.7;transform:scale(0.95);} }
+
+    .toast { position: fixed; top: 16px; right: 16px; z-index: 1000; padding: 12px 20px; border-radius: 10px; font-size: 13px; font-weight: 600; color: white; display: none; box-shadow: 0 8px 24px rgba(0,0,0,0.5); max-width: 300px; }
+    .toast.show { display: block; }
+    .toast.success { background: linear-gradient(135deg,#15803d,#16a34a); }
+    .toast.error { background: linear-gradient(135deg,#991b1b,#dc2626); }
+
+    @media(max-width:768px){ .body{padding:12px 14px;} .stats-grid{grid-template-columns:repeat(2,1fr);} .header{padding:10px 16px 8px;} }
+    @media(max-width:480px){ .card-grid{grid-template-columns:repeat(2,1fr);} .opp-grid{grid-template-columns:repeat(2,1fr);} .port-grid{grid-template-columns:repeat(2,1fr);} }
+  </style>
+</head>
+<body>
+
+<div id="loading" class="loading-screen">
+  <div class="loading-inner">
+    <span class="loading-icon">✨</span>
+    <div class="loading-title">Lorcana Enchanted Intelligence</div>
+    <div class="loading-sub">Connecting to live database...</div>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+  <div class="toast" id="toast"></div>
+
+  <div class="header">
+    <div class="header-inner">
+      <div class="header-top">
+        <div>
+          <div class="logo">✦ Lorcana Enchanted Intelligence ✦</div>
+          <div class="logo-sub">LIVE PRICES · PORTFOLIO · BUYING OPPORTUNITIES</div>
+        </div>
+        <div class="header-btns">
+          <button class="btn btn-primary" id="refreshBtn" onclick="triggerRefresh()">🔄 Refresh All Prices</button>
+          <button class="btn btn-ghost" onclick="exportCSV()">📥 CSV</button>
+          <button class="btn btn-ghost" onclick="loadAll()">↺</button>
+        </div>
+      </div>
+      <div class="chips">
+        <span class="chip" id="chipPriced">📊 0/0 priced</span>
+        <span class="chip" id="chipOwned">💎 0 owned</span>
+        <span class="chip" id="chipOpps">🎯 0 opportunities</span>
+        <span class="chip">⚡ Auto-refresh every 6h</span>
+      </div>
+      <div class="progress-wrap" id="progressWrap" style="display:none">
+        <div class="progress-label" id="progressLabel">Starting...</div>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="body">
+    <div class="tabs">
+      <button class="tab active" id="tab-tracker" onclick="switchTab('tracker')">📋 All Cards</button>
+      <button class="tab" id="tab-opportunities" onclick="switchTab('opportunities')">🎯 Buy Opps</button>
+      <button class="tab" id="tab-portfolio" onclick="switchTab('portfolio')">💎 Portfolio</button>
+    </div>
+
+    <div id="view-tracker">
+      <div class="filters">
+        <input class="filter-input" id="search" placeholder="🔍 Search enchanteds..." oninput="renderTracker()">
+        <select class="filter-select" id="filterSet" onchange="renderTracker()"><option value="all">All Sets</option></select>
+        <select class="filter-select" id="filterOwned" onchange="renderTracker()">
+          <option value="all">All Cards</option>
+          <option value="owned">✅ Owned</option>
+          <option value="missing">❌ Missing</option>
+        </select>
+        <select class="filter-select" id="sortBy" onchange="renderTracker()">
+          <option value="set">By Set</option>
+          <option value="price_desc">Price ↓</option>
+          <option value="price_asc">Price ↑</option>
+          <option value="opportunity">Best Opportunity</option>
+        </select>
+      </div>
+      <div class="results-count" id="resultsCount"></div>
+      <div class="card-grid" id="cardGrid"></div>
+    </div>
+
+    <div id="view-opportunities" style="display:none"><div id="oppContent"></div></div>
+    <div id="view-portfolio" style="display:none">
+      <div class="stats-grid" id="statsGrid"></div>
+      <div class="port-grid" id="portfolioGrid"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SET_META = {
+  1:{name:"The First Chapter",short:"TFC",color:"#f0c040",emoji:"⭐"},
+  2:{name:"Rise of the Floodborn",short:"ROF",color:"#a78bfa",emoji:"🌊"},
+  3:{name:"Into the Inklands",short:"ITI",color:"#34d399",emoji:"🗺️"},
+  4:{name:"Ursula's Return",short:"UR",color:"#c084fc",emoji:"🐙"},
+  5:{name:"Shimmering Skies",short:"SS",color:"#60a5fa",emoji:"☁️"},
+  6:{name:"Azurite Sea",short:"AS",color:"#2dd4bf",emoji:"🌊"},
+  7:{name:"Archazia's Island",short:"AI",color:"#fb923c",emoji:"🏝️"},
+  8:{name:"Reign of Jafar",short:"ROJ",color:"#f87171",emoji:"🧞"},
+  9:{name:"Fabled",short:"FAB",color:"#fbbf24",emoji:"✨"},
+  10:{name:"Whispers in the Well",short:"WW",color:"#818cf8",emoji:"🌙"},
+  11:{name:"Winterspell",short:"WS",color:"#93c5fd",emoji:"❄️"},
+  12:{name:"Wilds Unknown",short:"WU",color:"#4ade80",emoji:"🌿"},
+};
+
+const imageCache = {};
+
+async function getCardImage(cardName, setId) {
+  const key = `${setId}-${cardName}`;
+  if (key in imageCache) return imageCache[key];
+  imageCache[key] = null;
+  try {
+    const name = encodeURIComponent(cardName.split(" - ")[0]);
+    const r = await fetch(`https://api.lorcast.com/v0/cards/search?q=${name}+rarity:enchanted+set:${setId}&unique=prints`);
+    const data = await r.json();
+    if (data.results?.length) {
+      const match = data.results.find(c => c.rarity === "Enchanted") || data.results[0];
+      imageCache[key] = match?.image_uris?.digital?.normal || null;
+    }
+  } catch(e) {}
+  return imageCache[key];
+}
+
+async function preloadBatch(cardList) {
+  const first = cardList.slice(0,24);
+  await Promise.all(first.map(c => getCardImage(c.card_name, c.set_id)));
+  renderTracker();
+  for (let i = 24; i < cardList.length; i += 8) {
+    await Promise.all(cardList.slice(i,i+8).map(c => getCardImage(c.card_name, c.set_id)));
+    renderTracker();
+    await new Promise(r => setTimeout(r,150));
+  }
+}
+
+let cards=[], prices={}, collection={};
+let progressInterval=null;
+const fmt = n => n!=null&&n!=="" ? `$${Number(n).toFixed(0)}` : "—";
+const fmtFull = n => n!=null&&n!=="" ? `$${Number(n).toFixed(2)}` : "—";
+
+function getSignal(snap) {
+  if (!snap?.avg_price||!snap?.lowest_nm_available) return null;
+  const d=(snap.lowest_nm_available-snap.avg_price)/snap.avg_price;
+  if (d<-0.2) return {label:"STRONG BUY",color:"#22c55e",bg:"rgba(34,197,94,0.15)",d};
+  if (d<-0.1) return {label:"BUY",color:"#22c55e",bg:"rgba(34,197,94,0.1)",d};
+  if (d<-0.02) return {label:"WATCH",color:"#f59e0b",bg:"rgba(245,158,11,0.1)",d};
+  if (d<0.1) return {label:"STABLE",color:"#6b7280",bg:"rgba(107,114,128,0.1)",d};
+  return {label:"PREMIUM",color:"#ef4444",bg:"rgba(239,68,68,0.1)",d};
+}
+
+function showToast(msg,type="success"){
+  const t=document.getElementById("toast");
+  t.textContent=msg; t.className=`toast show ${type}`;
+  setTimeout(()=>t.className="toast",3500);
+}
+
+async function loadAll(){
+  document.getElementById("loading").style.display="flex";
+  document.getElementById("app").style.display="none";
+  try {
+    const [cr,pr,colr]=await Promise.all([
+      fetch("/api/cards").then(r=>r.json()),
+      fetch("/api/prices").then(r=>r.json()),
+      fetch("/api/collection").then(r=>r.json()),
+    ]);
+    cards=Array.isArray(cr)?cr:[];
+    prices={}; if(Array.isArray(pr)) pr.forEach(p=>prices[p.card_id]=p);
+    collection={}; if(Array.isArray(colr)) colr.forEach(c=>collection[c.card_id]=c);
+
+    const sel=document.getElementById("filterSet");
+    sel.innerHTML='<option value="all">All Sets</option>';
+    Object.entries(SET_META).forEach(([id,m])=>sel.innerHTML+=`<option value="${id}">${m.emoji} Set ${id} — ${m.short}</option>`);
+
+    updateChips();
+    document.getElementById("loading").style.display="none";
+    document.getElementById("app").style.display="block";
+    renderAll();
+    preloadBatch(cards);
+  } catch(e) {
+    document.getElementById("loading").innerHTML=`<div style="text-align:center;background:#13162a;padding:36px;border-radius:20px;border:1px solid #252942;max-width:380px"><div style="font-size:48px;margin-bottom:16px">⚠️</div><div style="font-size:15px;color:#ef4444;font-weight:700;margin-bottom:8px">Connection Error</div><div style="font-size:12px;color:#6b7280;margin-bottom:20px">${e.message}</div><button class="btn btn-primary" onclick="loadAll()">Try Again</button></div>`;
+  }
+}
+
+function updateChips(){
+  const owned=cards.filter(c=>collection[c.id]?.owned).length;
+  const fetched=cards.filter(c=>prices[c.id]).length;
+  const opps=cards.filter(c=>{const s=getSignal(prices[c.id]);return s&&s.d<-0.1;}).length;
+  document.getElementById("chipPriced").textContent=`📊 ${fetched}/${cards.length} priced`;
+  document.getElementById("chipOwned").textContent=`💎 ${owned} owned`;
+  document.getElementById("chipOpps").textContent=`🎯 ${opps} opportunities`;
+  document.getElementById("chipOpps").className=opps>0?"chip active":"chip";
+}
+
+function renderAll(){renderTracker();renderOpportunities();renderPortfolio();}
+
+function renderTracker(){
+  const search=(document.getElementById("search")?.value||"").toLowerCase();
+  const filterSet=document.getElementById("filterSet")?.value||"all";
+  const filterOwned=document.getElementById("filterOwned")?.value||"all";
+  const sortBy=document.getElementById("sortBy")?.value||"set";
+
+  let filtered=cards.filter(c=>{
+    if(search&&!c.card_name.toLowerCase().includes(search)) return false;
+    if(filterSet!=="all"&&c.set_id!==parseInt(filterSet)) return false;
+    if(filterOwned==="owned"&&!collection[c.id]?.owned) return false;
+    if(filterOwned==="missing"&&collection[c.id]?.owned) return false;
+    return true;
+  }).sort((a,b)=>{
+    if(sortBy==="price_desc") return (prices[b.id]?.avg_price||0)-(prices[a.id]?.avg_price||0);
+    if(sortBy==="price_asc") return (prices[a.id]?.avg_price||0)-(prices[b.id]?.avg_price||0);
+    if(sortBy==="opportunity") return (getSignal(prices[a.id])?.d||0)-(getSignal(prices[b.id])?.d||0);
+    return a.set_id-b.set_id;
+  });
+
+  const rc=document.getElementById("resultsCount");
+  if(rc) rc.textContent=`${filtered.length} enchanteds`;
+
+  let html="", lastSet=null;
+  filtered.forEach(card=>{
+    const snap=prices[card.id]||{}, col=collection[card.id]||{};
+    const meta=SET_META[card.set_id]||{};
+    const sig=getSignal(snap), owned=!!col.owned;
+    const imgUrl=imageCache[`${card.set_id}-${card.card_name}`];
+    const pnl=snap.avg_price&&col.paid_price ? snap.avg_price-col.paid_price : null;
+    const pnlPct=pnl&&col.paid_price ? (pnl/col.paid_price*100) : null;
+    const price=snap.avg_price||snap.tcgplayer_nm;
+
+    if(sortBy==="set"&&card.set_id!==lastSet){
+      lastSet=card.set_id;
+      html+=`<div class="set-header" style="color:${meta.color};border-bottom-color:${meta.color}35">${meta.emoji} Set ${card.set_id} — ${meta.name}</div>`;
+    }
+
+    const imgHtml=imgUrl
+      ?`<img class="card-img" src="${imgUrl}" alt="${card.card_name}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'card-img-placeholder\\'>${meta.emoji}</div>'">`
+      :`<div class="card-img-placeholder">${meta.emoji}</div>`;
+
+    const priceChip=price
+      ?`<div class="price-chip"><div class="price-chip-val">${fmt(price)}</div><div class="price-chip-lbl">Market</div></div>`
+      :`<div class="price-chip no-price"><div class="price-chip-val">—</div><div class="price-chip-lbl">No data</div></div>`;
+
+    const paidRow=owned?`<div class="paid-row">
+      <span class="paid-label">Paid:</span>
+      <input class="paid-input" type="number" step="0.01" value="${col.paid_price||""}" placeholder="$0" onblur="updatePaid('${card.id}',this.value)" onclick="event.stopPropagation()">
+      ${pnl!==null?`<span class="pnl-chip" style="color:${pnl>=0?"#22c55e":"#ef4444"};background:${pnl>=0?"rgba(34,197,94,0.12)":"rgba(239,68,68,0.12)"}">${pnl>=0?"+":""}${fmt(pnl)}</span>`:""}
+    </div>`:"";
+
+    html+=`<div class="card-tile${owned?" owned":""}" style="${owned?`border-color:${meta.color}55`:""}">
+      <div class="card-img-wrap">
+        ${imgHtml}
+        <div class="card-img-overlay"></div>
+        <div class="own-badge${owned?" owned":""}" onclick="toggleOwned('${card.id}')">${owned?"✓":""}</div>
+        ${sig?`<div class="signal-badge" style="color:${sig.color};background:${sig.bg};border-color:${sig.color}35">${sig.label}</div>`:""}
+        <div class="price-overlay">
+          <div class="card-name-overlay">${card.card_name}</div>
+          ${priceChip}
+        </div>
+      </div>
+      ${paidRow}
+    </div>`;
+  });
+
+  if(!filtered.length) html=`<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🔍</div>No cards match</div>`;
+  const grid=document.getElementById("cardGrid");
+  if(grid) grid.innerHTML=html;
+}
+
+function renderOpportunities(){
+  const opps=cards.filter(c=>{const s=getSignal(prices[c.id]);return s&&s.d<-0.1;}).sort((a,b)=>(getSignal(prices[a.id])?.d||0)-(getSignal(prices[b.id])?.d||0));
+  let html=`<div class="opp-banner"><div class="opp-title">🎯 ${opps.length} buying opportunities</div><div class="opp-desc">Lowest NM is 10%+ below avg market · Sorted by biggest discount</div></div>`;
+  if(!opps.length){
+    html+=`<div class="empty"><div class="empty-icon">🎯</div>${Object.keys(prices).length===0?"Run Refresh All to detect opportunities":"No opportunities at current prices"}</div>`;
+  } else {
+    html+=`<div class="opp-grid">`;
+    opps.forEach(card=>{
+      const snap=prices[card.id], meta=SET_META[card.set_id]||{}, sig=getSignal(snap);
+      const imgUrl=imageCache[`${card.set_id}-${card.card_name}`];
+      const imgHtml=imgUrl?`<img class="card-img" src="${imgUrl}" style="width:100%;aspect-ratio:488/681;object-fit:cover;" loading="lazy">`:`<div style="aspect-ratio:488/681;display:flex;align-items:center;justify-content:center;font-size:36px;background:var(--surface2)">${meta.emoji}</div>`;
+      html+=`<div class="opp-card">
+        <div style="position:relative">
+          ${imgHtml}
+          <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(13,15,26,0.9) 0%,transparent 60%)"></div>
+          <div style="position:absolute;bottom:8px;left:8px;right:8px">
+            <div style="font-size:11px;font-weight:700;color:white;margin-bottom:4px">${card.card_name}</div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:10px;color:${meta.color}">${meta.emoji} Set ${card.set_id}</span>
+              <span style="font-size:12px;font-weight:700;color:#22c55e">${fmtFull(snap.lowest_nm_available)}</span>
+            </div>
+          </div>
+          <div style="position:absolute;top:7px;right:7px;font-size:8px;font-weight:700;padding:2px 7px;border-radius:99px;color:${sig?.color};background:${sig?.bg};border:1px solid ${sig?.color}35">${(sig?.d*100).toFixed(1)}% below</div>
+        </div>
+      </div>`;
+    });
+    html+=`</div>`;
+  }
+  const el=document.getElementById("oppContent"); if(el) el.innerHTML=html;
+}
+
+function renderPortfolio(){
+  const owned=cards.filter(c=>collection[c.id]?.owned);
+  const totalPaid=owned.reduce((a,c)=>a+(collection[c.id]?.paid_price||0),0);
+  const totalMarket=owned.reduce((a,c)=>a+(prices[c.id]?.avg_price||0),0);
+  const pnl=totalMarket-totalPaid;
+  const sg=document.getElementById("statsGrid");
+  if(sg) sg.innerHTML=[
+    {label:"Cards Owned",val:owned.length,color:"#f0c040"},
+    {label:"Total Paid",val:fmtFull(totalPaid),color:"#a78bfa"},
+    {label:"Market Value",val:fmtFull(totalMarket),color:"#60a5fa"},
+    {label:"Unrealized P&L",val:`${pnl>=0?"+":""}${fmtFull(pnl)}`,color:pnl>=0?"#22c55e":"#ef4444"},
+  ].map(s=>`<div class="stat-card" style="border-color:${s.color}20"><div class="stat-val" style="color:${s.color}">${s.val}</div><div class="stat-label">${s.label}</div></div>`).join("");
+
+  const pg=document.getElementById("portfolioGrid"); if(!pg) return;
+  if(!owned.length){pg.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="empty-icon">💎</div>Mark cards as owned in the tracker</div>`;return;}
+
+  pg.innerHTML=owned.map(card=>{
+    const snap=prices[card.id]||{}, col=collection[card.id]||{}, meta=SET_META[card.set_id]||{};
+    const cardPnl=snap.avg_price&&col.paid_price?snap.avg_price-col.paid_price:null;
+    const cardPct=cardPnl&&col.paid_price?(cardPnl/col.paid_price*100):null;
+    const imgUrl=imageCache[`${card.set_id}-${card.card_name}`];
+    const price=snap.avg_price||snap.tcgplayer_nm;
+    return `<div class="card-tile${col.owned?" owned":""}" style="border-color:${meta.color}40">
+      <div class="card-img-wrap">
+        ${imgUrl?`<img class="card-img" src="${imgUrl}" alt="${card.card_name}" loading="lazy">`:`<div class="card-img-placeholder">${meta.emoji}</div>`}
+        <div class="card-img-overlay"></div>
+        <div class="price-overlay">
+          <div class="card-name-overlay">${card.card_name}</div>
+          ${price?`<div class="price-chip"><div class="price-chip-val">${fmt(price)}</div><div class="price-chip-lbl">Market</div></div>`:""}
+        </div>
+      </div>
+      <div class="paid-row">
+        <span class="paid-label">Paid:</span>
+        <input class="paid-input" type="number" step="0.01" value="${col.paid_price||""}" placeholder="$0" onblur="updatePaid('${card.id}',this.value)">
+        ${cardPnl!==null?`<span class="pnl-chip" style="color:${cardPnl>=0?"#22c55e":"#ef4444"};background:${cardPnl>=0?"rgba(34,197,94,0.12)":"rgba(239,68,68,0.12)"}">${cardPnl>=0?"+":""}${fmt(cardPnl)}</span>`:""}
+      </div>
+    </div>`;
+  }).join("");
+}
+
+async function toggleOwned(cardId){
+  const cur=collection[cardId]||{card_id:cardId,owned:false};
+  collection[cardId]={...cur,owned:!cur.owned};
+  await fetch("/api/collection",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({card_id:cardId,owned:collection[cardId].owned,paid_price:cur.paid_price||null})});
+  updateChips(); renderAll();
+}
+
+async function updatePaid(cardId,value){
+  const cur=collection[cardId]||{card_id:cardId,owned:false};
+  collection[cardId]={...cur,paid_price:parseFloat(value)||null};
+  await fetch("/api/collection",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({card_id:cardId,owned:cur.owned,paid_price:parseFloat(value)||null})});
+  updateChips(); renderPortfolio();
+}
+
+async function triggerRefresh(){
+  const res=await fetch("/api/refresh/all",{method:"POST"}).then(r=>r.json());
+  if(res.success){
+    const btn=document.getElementById("refreshBtn");
+    btn.textContent="⏹ Cancel"; btn.className="btn btn-danger"; btn.onclick=cancelRefresh;
+    document.getElementById("progressWrap").style.display="block";
+    startPolling();
+  } else { showToast(res.message||"Already refreshing","error"); }
+}
+
+function cancelRefresh(){
+  clearInterval(progressInterval);
+  document.getElementById("progressWrap").style.display="none";
+  const btn=document.getElementById("refreshBtn");
+  btn.textContent="🔄 Refresh All Prices"; btn.className="btn btn-primary"; btn.onclick=triggerRefresh;
+}
+
+function startPolling(){
+  progressInterval=setInterval(async()=>{
+    try{
+      const p=await fetch("/api/refresh/progress").then(r=>r.json());
+      document.getElementById("progressLabel").textContent=`🔍 ${p.card} (${p.current}/${p.total||cards.length})`;
+      document.getElementById("progressFill").style.width=`${p.total?(p.current/p.total)*100:0}%`;
+      if(!p.running&&(p.done||p.current>0)){clearInterval(progressInterval);showToast("✨ Refresh complete!");cancelRefresh();loadAll();}
+    }catch{}
+  },2000);
+}
+
+function exportCSV(){
+  const date=new Date().toISOString().split("T")[0];
+  const hdrs=["Set","Set Name","Card","TCGPlayer NM","eBay Avg","Avg Price","Lowest NM","Owned","Paid","P&L $","P&L %","Signal","Updated"];
+  const rows=cards.map(c=>{
+    const p=prices[c.id]||{}, col=collection[c.id]||{};
+    const pnl=p.avg_price&&col.paid_price?(p.avg_price-col.paid_price).toFixed(2):"";
+    const pct=p.avg_price&&col.paid_price?(((p.avg_price-col.paid_price)/col.paid_price)*100).toFixed(1)+"%":"";
+    const sig=getSignal(p);
+    return [c.set_id,SET_META[c.set_id]?.name,c.card_name,p.tcgplayer_nm||"",p.ebay_nm_avg||"",p.avg_price||"",p.lowest_nm_available||"",col.owned?"YES":"",col.paid_price||"",pnl,pct,sig?.label||"",p.fetched_at?.split("T")[0]||""].map(v=>`"${v}"`).join(",");
+  });
+  const blob=new Blob([[hdrs.map(h=>`"${h}"`).join(","),...rows].join("\n")],{type:"text/csv"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=`Lorcana_${date}.csv`; a.click();
+}
+
+function switchTab(name){
+  ["tracker","opportunities","portfolio"].forEach(t=>{
+    document.getElementById(`view-${t}`).style.display=t===name?"block":"none";
+    document.getElementById(`tab-${t}`).className=`tab${t===name?" active":""}`;
+  });
+  if(name==="opportunities") renderOpportunities();
+  if(name==="portfolio") renderPortfolio();
+}
+
+loadAll();
+</script>
+</body>
+</html>
