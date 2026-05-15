@@ -521,7 +521,7 @@ function startPolling() {
       const p = await fetch("/api/refresh/progress").then(r=>r.json());
       document.getElementById("progressLabel").textContent = `🔍 ${p.card} (${p.current}/${p.total||cards.length})`;
       document.getElementById("progressFill").style.width = `${p.total?(p.current/p.total)*100:0}%`;
-      if (!p.running && p.current>0) { clearInterval(progressInterval); showToast("✨ Refresh complete!"); cancelRefresh(); loadAll(); }
+      if (!p.running && (p.done || p.current > 0)) { clearInterval(progressInterval); showToast("✨ Refresh complete!"); cancelRefresh(); loadAll(); }
     } catch {}
   }, 2000);
 }
