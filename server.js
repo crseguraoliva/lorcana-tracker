@@ -139,7 +139,9 @@ cron.schedule("0 */6 * * *", () => {
   runFullRefresh();
 });
 
-app.get("/", (req, res) => res.json({ status: "ok", message: "Lorcana Tracker API" }));
+const path = require("path");
+app.use(express.static(path.join(__dirname, ".")));
+app.get("/", (req, res) => res.sendFile(path.join(__dirname, "index.html")));
 
 app.get("/api/cards", async (req, res) => {
   const { data, error } = await supabase.from("cards").select("*").order("set_id").order("id");
