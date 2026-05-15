@@ -129,9 +129,9 @@ async function runFullRefresh() {
     await new Promise(r => setTimeout(r, 800));
   }
 
-  refreshProgress = { current: 0, total: 0, card: "", running: false };
-  refreshInProgress = false;
-  console.log("Full refresh complete!");
+ refreshProgress = { current: refreshProgress.total, total: refreshProgress.total, card: "Complete!", running: false, done: true };
+refreshInProgress = false;
+console.log("Full refresh complete!");
 }
 
 cron.schedule("0 */6 * * *", () => {
