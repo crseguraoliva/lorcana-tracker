@@ -21,49 +21,48 @@ const supabase = createClient(
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
 
 async function fetchCardPrices(cardName, setName) {
-  const prompt = `Search for current Disney Lorcana Enchanted card prices for: "${cardName}" from "${setName}".
-Search TCGPlayer NM Holofoil, eBay sold listings NM, and PSA graded eBay sales.
-Return ONLY valid JSON, no markdown:
-{
-  "tcgplayer_nm": <number or null>,
-  "ebay_nm_avg": <number or null>,
-  "ebay_sold_prices": [<up to 5 numbers>],
-  "lowest_nm_available": <number or null>,
-  "total_nm_listings": <number or null>,
-  "psa9_price": <number or null>,
-  "psa10_price": <number or null>,
-  "listings": [{"price": <number>, "seller": "<string>"}]
-}`;
-
   try {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": ANTHROPIC_KEY,
-        "anthropic-version": "2023-06-01"
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 800,
-        tools: [{ type: "web_search_20250305", name: "web_search" }],
-        messages: [{ role: "user", content: prompt }]
-      })
-    });
+    const parts = cardName.split(" - ");
+    const name = encodeURIComponent(parts[0]);
+    const setId = Object.entries({
+      "The First Chapter":"1","Rise of the Floodborn":"2",
+      "Into the Inklands":"3","Ursula's Return":"4",
+      "Ursula Return":"4","Shimmering Skies":"5",
+      "Azurite Sea":"6","Archazias Island":"7","Archazia's Island":"7",
+      "Reign of Jafar":"8","Fabled":"9","Whispers in the Well":"10",
+      "Winterspell":"11","Wilds Unknown":"12"
+    }).find(([k]) => setName.includes(k))?.[1] || "";
 
-    const data = await res.json();
-    const text = (data.content || []).filter(b => b.type === "text").map(b => b.text).join("");
-    const match = text.match(/\{[\s\S]*?\}/);
-    if (match) {
-      const p = JSON.parse(match[0]);
-      const vals = [p.tcgplayer_nm, p.ebay_nm_avg].filter(Boolean);
-      p.avg_price = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
-      return { ...p, success: true };
-    }
-  } catch (e) {
+    const r = await fetch(`https://api.lorcast.com/v0/cards/search?q=${name}+rarity:enchanted+set:${setId}&unique=prints`);
+    const data = await r.json();
+
+    if (!data.results?.length) return { success: false };
+
+    const card = data.results.find(c =>
+      c.rarity === "Enchanted" &&
+      (parseInt(c.set?.code) === parseInt(setId) || !setId)
+    ) || data.results.find(c => c.rarity === "Enchanted") || data.results[0];
+
+    const tcgplayer_nm = card.prices?.usd_foil ? parseFloat(card.prices.usd_foil) : null;
+    const avg_price = tcgplayer_nm;
+
+    return {
+      success: true,
+      tcgplayer_nm,
+      ebay_nm_avg: null,
+      ebay_sold_prices: [],
+      lowest_nm_available: tcgplayer_nm,
+      total_nm_listings: null,
+      psa9_price: null,
+      psa10_price: null,
+      avg_price,
+      image_url: card.image_uris?.digital?.normal || null,
+      tcgplayer_id: card.tcgplayer_id || null,
+    };
+  } catch(e) {
     console.error(`Error fetching ${cardName}:`, e.message);
+    return { success: false };
   }
-  return { success: false };
 }
 
 async function saveSnapshot(cardId, result) {
